@@ -67,7 +67,7 @@ async def upload_book(file: UploadFile = File(...)):
             temp_path = tmp.name
 
         # Upload to Gemini
-        client = genai.Client()
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
         my_file = client.files.upload(file=temp_path)
 
         prompt = (
