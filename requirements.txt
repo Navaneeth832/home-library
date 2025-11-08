@@ -4,3 +4,6 @@ pydantic
 psycopg2-binary
 python-dotenv
 uvicorn
+gspread
+oauth2client
+gspread-formatting

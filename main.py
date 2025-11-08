@@ -10,6 +10,11 @@ from dotenv import load_dotenv
 import tempfile
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+import time
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from gspread_formatting import *
+
 
 load_dotenv()  # load environment variables if present
 
@@ -18,6 +23,17 @@ DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
+
+SHEET_NAME = "Family_Library_Books"
+
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/spreadsheets"
+]
+creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+client = gspread.authorize(creds)
+sheet = client.open(SHEET_NAME)
 
 # Check for missing environment variables
 if not all([DB_HOST, DB_NAME, DB_USER, DB_PASS]):
@@ -78,13 +94,22 @@ async def upload_book(file: UploadFile = File(...)):
         cur = conn.cursor()
         
         # Use parameterized query to prevent SQL injection
-        query = "INSERT INTO books (title, genre) VALUES (%s, %s);"
+        query = "INSERT INTO books (title, genre) VALUES (%s, %s) RETURNING id;"
         cur.execute(query, (book_data['title'], book_data['genre']))
         
+        #get the id of the inserted row
+        new_id = cur.fetchone()[0]
+
         conn.commit()
         cur.close()
         conn.close()
 
+        # --- Add to Google Sheet ---
+        worksheet = sheet.worksheet("Sheet1")
+        added_at = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        row = [new_id, book_data['title'], book_data['genre'], added_at]
+        worksheet.append_row(row)
+        
         return {
             "status": "success",
             "book": book_data,
