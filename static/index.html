@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Library Manager</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the app */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the file input dropzone when dragging a file over */
+        .drag-over {
+            border-color: #3b82f6; /* blue-500 */
+            background-color: #eff6ff; /* blue-50 */
+        }
+        /* Custom spinner */
+        .loader {
+            border: 4px solid #f3f3f3; /* light grey */
+            border-top: 4px solid #3b82f6; /* blue-500 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900 antialiased">
+
+    <!-- Main Container -->
+    <div class="container mx-auto max-w-2xl p-4 sm:p-6 lg:p-8 min-h-screen">
+        
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">
+                📚 Home Library
+            </h1>
+            <p class="text-gray-600 mt-2">Your personal book collection, digitized.</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="flex justify-center mb-6 bg-white rounded-lg shadow-sm p-2">
+            <button id="tab-add" class="tab-btn flex-1 text-center py-3 px-4 rounded-md font-medium text-white bg-blue-600 shadow-md transition-all">
+                Add Book
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main>
+            <!-- ======================= -->
+            <!--     ADD BOOK PANEL      -->
+            <!-- ======================= -->
+            <section id="panel-add" class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                <!-- Message Area for success/error -->
+                <div id="message-area" class="hidden mb-4 p-4 rounded-md"></div>
+
+                <!-- Drop Zone -->
+                <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-all cursor-pointer hover:border-blue-500 hover:bg-blue-50">
+                    
+                    <!-- Default Upload Options -->
+                    <div id="upload-options" class="flex flex-col items-center">
+                        <!-- Upload Icon -->
+                        <svg class="w-16 h-16 text-gray-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                        </svg>
+                        <p class="font-medium text-gray-600 mb-2">Drag & drop a book cover image</p>
+                        <p class="text-sm text-gray-500 mb-6">or select a file from your device</p>
+                        
+                        <div class="flex flex-col sm:flex-row gap-4 w-full max-w-xs">
+                            <!-- Upload Button -->
+                            <button id="upload-btn" class="flex-1 bg-white border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm hover:bg-gray-100 transition-all">
+                                Upload Image
+                            </button>
+                            <!-- Camera Button -->
+                            <button id="camera-btn" class="flex-1 bg-white border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg shadow-sm hover:bg-gray-100 transition-all">
+                                Use Camera
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Image Preview (hidden by default) -->
+                    <div id="image-preview" class="hidden relative">
+                        <img id="preview-img" src="" alt="Book Cover Preview" class="max-h-64 mx-auto rounded-md shadow-md">
+                        <button id="clear-preview-btn" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full h-8 w-8 flex items-center justify-center shadow-lg hover:bg-red-600 transition-all" title="Clear Image">
+                            <!-- Heroicon: X-Mark -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Hidden File Inputs -->
+                    <input type="file" id="upload-input" accept="image/*" class="hidden">
+                    <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden">
+                </div>
+
+                <!-- Submit Button -->
+                <button id="submit-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg mt-6 shadow-md hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center" disabled>
+                    <span id="submit-btn-text">Add to Library</span>
+                    <div id="submit-loader" class="loader hidden"></div>
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <script type="module">
+        // --- DOM Elements ---
+        const $ = (selector) => document.querySelector(selector);
+        
+        const tabAdd = $('#tab-add');
+        const panelAdd = $('#panel-add');
+        
+        const dropZone = $('#drop-zone');
+        const uploadOptions = $('#upload-options');
+        const uploadBtn = $('#upload-btn');
+        const cameraBtn = $('#camera-btn');
+        const uploadInput = $('#upload-input');
+        const cameraInput = $('#camera-input');
+        
+        const imagePreview = $('#image-preview');
+        const previewImg = $('#preview-img');
+        const clearPreviewBtn = $('#clear-preview-btn');
+        
+        const submitBtn = $('#submit-btn');
+        const submitBtnText = $('#submit-btn-text');
+        const submitLoader = $('#submit-loader');
+        
+        const messageArea = $('#message-area');
+
+        // --- App State ---
+        let selectedFile = null;
+        let isLoading = false;
+
+        // --- Functions ---
+
+        /**
+         * Handles the file selection from any input (upload, camera, drop).
+         */
+        function handleFileSelect(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                showMessage('error', 'Oops! Please select an image file. 😵');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // Show image preview
+            previewImg.src = URL.createObjectURL(file);
+            imagePreview.classList.remove('hidden');
+            uploadOptions.classList.add('hidden');
+            
+            // Enable submit button
+            submitBtn.disabled = false;
+            
+            // Clear any old messages
+            hideMessage();
+        }
+
+        /**
+         * Clears the selected file and resets the upload UI.
+         */
+        function clearFileSelection() {
+            selectedFile = null;
+            
+            // Hide preview, show upload options
+            imagePreview.classList.add('hidden');
+            previewImg.src = '';
+            uploadOptions.classList.remove('hidden');
+            
+            // Reset file input values to allow re-selection of the same file
+            uploadInput.value = null;
+            cameraInput.value = null;
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+        }
+
+        /**
+         * Shows a success or error message to the user.
+         */
+        function showMessage(type, text) {
+            messageArea.innerHTML = text;
+            messageArea.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+            
+            if (type === 'success') {
+                messageArea.classList.add('bg-green-100', 'text-green-700');
+            } else if (type === 'error') {
+                messageArea.classList.add('bg-red-100', 'text-red-700');
+            }
+            
+            // Scroll to the message
+            messageArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        /**
+         * Hides the message area.
+         */
+        function hideMessage() {
+            messageArea.classList.add('hidden');
+        }
+
+        /**
+         * Sets the loading state for the submit button.
+         */
+        function setLoading(loading) {
+            isLoading = loading;
+            if (loading) {
+                submitBtn.disabled = true;
+                submitBtnText.classList.add('hidden');
+                submitLoader.classList.remove('hidden');
+            } else {
+                // Only re-enable if a file is still selected
+                submitBtn.disabled = !selectedFile;
+                submitBtnText.classList.remove('hidden');
+                submitLoader.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Submits the selected file to the backend.
+         */
+        async function uploadBook() {
+            if (!selectedFile || isLoading) return;
+            
+            setLoading(true);
+            hideMessage();
+            
+            const formData = new FormData();
+            formData.append('file', selectedFile, selectedFile.name);
+
+            try {
+                // IMPORTANT: Replace '/upload-book/' with your full backend URL
+                // if it's hosted on a different domain.
+                const response = await fetch('http://192.168.29.253:8000/upload-book/', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Handle HTTP errors (e.g., 500)
+                    throw new Error(result.detail || 'Server error, please try again.');
+                }
+
+                // Success!
+                showMessage('success', `Woohoo! 🥳 <strong>${result.book.title}</strong> was added to your library.`);
+                clearFileSelection();
+                
+            } catch (error) {
+                console.error('Upload failed:', error);
+                showMessage('error', `Aww, snap! 😵 Something went wrong: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // --- Event Listeners ---
+        
+        // "Add Book" Panel Listeners
+        
+        // Trigger file inputs
+        uploadBtn.addEventListener('click', () => uploadInput.click());
+        cameraBtn.addEventListener('click', () => cameraInput.click());
+        
+        // Handle file selection from inputs
+        uploadInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+        cameraInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+        
+        // Clear selected file
+        clearPreviewBtn.addEventListener('click', clearFileSelection);
+        
+        // Drag and Drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Submit Button
+        submitBtn.addEventListener('click', uploadBook);
+
+    </script>
+</body>
+</html>
