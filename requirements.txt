@@ -8,4 +8,4 @@ gspread
 oauth2client
 gspread-formatting
 google-genai
-
+python-multipart
